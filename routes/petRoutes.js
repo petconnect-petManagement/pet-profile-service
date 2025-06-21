@@ -2,20 +2,35 @@ const express = require('express');
 const router = express.Router();
 const PetProfile = require('../models/PetProfile');
 const authMiddleware = require('../middleware/authMiddleware');
+const { body, validationResult } = require('express-validator');
+
 
 // Crear perfil de mascota
-router.post('/', authMiddleware, async (req, res) => {
-  try {
-    const pet = new PetProfile({
-      userId: req.user.id,
-      ...req.body
-    });
-    await pet.save();
-    res.status(201).json(pet);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+router.post('/',
+  authMiddleware,
+  [
+    body('name').notEmpty().withMessage('Name is required'),
+    body('species').notEmpty().withMessage('Species is required'),
+    body('age').isInt({ min: 0 }).withMessage('Age must be a positive number')
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const pet = new PetProfile({
+        userId: req.user.id,
+        ...req.body
+      });
+      await pet.save();
+      res.status(201).json(pet);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
 });
+
 
 // Listar mascotas por usuario (debe ir PRIMERO!)
 router.get('/user/:userId', async (req, res) => {

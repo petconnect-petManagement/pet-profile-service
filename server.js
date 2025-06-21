@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const petRoutes = require('./routes/petRoutes');
+const petRoutes = require('./routes/petRoutes.js');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
