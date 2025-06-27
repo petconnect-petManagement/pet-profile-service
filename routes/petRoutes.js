@@ -3,35 +3,9 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const PetProfile = require('../models/PetProfile');
 const authMiddleware = require('../middleware/authMiddleware');
+const axios = require('axios');
 
-/**
- * @swagger
- * /pets:
- *   post:
- *     summary: Create a new pet profile
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               species:
- *                 type: string
- *               breed:
- *                 type: string
- *               age:
- *                 type: integer
- *     responses:
- *       201:
- *         description: Pet created
- *       400:
- *         description: Validation error
- */
+
 router.post('/',
   authMiddleware,
   [
@@ -46,34 +20,34 @@ router.post('/',
     }
 
     try {
+      const userId = req.user.id;
+
+      // Verificamos que el user existe en user-profile-service
+      const response = await axios.get(`http://localhost:3001/user/${userId}`);
+
+      if (!response.data) {
+        return res.status(400).json({ message: 'User not found in user-profile-service' });
+      }
+
       const pet = new PetProfile({
-        userId: req.user.id,
+        userId,
         ...req.body
       });
+
       await pet.save();
       res.status(201).json(pet);
     } catch (err) {
+      console.error(err.message);
+
+      if (err.response && err.response.status === 404) {
+        return res.status(400).json({ message: 'User not found in user-profile-service' });
+      }
+
       res.status(500).json({ message: err.message });
     }
 });
 
-/**
- * @swagger
- * /pets/{id}:
- *   get:
- *     summary: Get pet profile by ID
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Pet profile found
- *       404:
- *         description: Pet not found
- */
+
 router.get('/:id', async (req, res) => {
   try {
     const pet = await PetProfile.findById(req.params.id);
@@ -86,41 +60,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /pets/{id}:
- *   put:
- *     summary: Update pet profile by ID
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       description: Fields to update
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               species:
- *                 type: string
- *               breed:
- *                 type: string
- *               age:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Updated pet profile
- *       500:
- *         description: Server error
- */
+
 router.put('/:id',
   authMiddleware,
   async (req, res) => {
@@ -136,25 +76,6 @@ router.put('/:id',
     }
 });
 
-/**
- * @swagger
- * /pets/{id}:
- *   delete:
- *     summary: Delete pet profile by ID
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Pet deleted successfully
- *       500:
- *         description: Server error
- */
 router.delete('/:id',
   authMiddleware,
   async (req, res) => {
@@ -166,23 +87,7 @@ router.delete('/:id',
     }
 });
 
-/**
- * @swagger
- * /pets/user/{userId}:
- *   get:
- *     summary: List all pets for a user
- *     parameters:
- *       - name: userId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of pets
- *       500:
- *         description: Server error
- */
+
 router.get('/user/:userId', async (req, res) => {
   try {
     const pets = await PetProfile.find({ userId: req.params.userId });

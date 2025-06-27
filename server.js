@@ -39,7 +39,8 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
-app.use('/pets', petRoutes);
+app.use('/api/pet-profile', petRoutes);
+
 
 // DB Connection
 mongoose.connect(process.env.MONGODB_URI)
