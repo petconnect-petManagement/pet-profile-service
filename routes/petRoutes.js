@@ -5,8 +5,9 @@ const PetProfile = require('../models/PetProfile');
 const authMiddleware = require('../middleware/authMiddleware');
 const axios = require('axios');
 
-
-router.post('/',
+// Crear perfil de mascota
+router.post(
+  '/',
   authMiddleware,
   [
     body('name').notEmpty().withMessage('Name is required'),
@@ -22,8 +23,10 @@ router.post('/',
     try {
       const userId = req.user.id;
 
-      // Verificamos que el user existe en user-profile-service
-      const response = await axios.get(`http://localhost:3001/user/${userId}`);
+      // ✅ Verifica existencia del usuario en user-profile-service vía Docker
+      const response = await axios.get(
+        `http://user-profile-service:3001/api/user-profile/user/${userId}`
+      );
 
       if (!response.data) {
         return res.status(400).json({ message: 'User not found in user-profile-service' });
@@ -45,9 +48,10 @@ router.post('/',
 
       res.status(500).json({ message: err.message });
     }
-});
+  }
+);
 
-
+// Obtener una mascota por su ID
 router.get('/:id', async (req, res) => {
   try {
     const pet = await PetProfile.findById(req.params.id);
@@ -60,34 +64,27 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
-router.put('/:id',
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const pet = await PetProfile.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
-      res.json(pet);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
+// Actualizar mascota
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const pet = await PetProfile.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(pet);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-router.delete('/:id',
-  authMiddleware,
-  async (req, res) => {
-    try {
-      await PetProfile.findByIdAndDelete(req.params.id);
-      res.json({ message: 'Pet deleted' });
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
+// Eliminar mascota
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    await PetProfile.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Pet deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-
+// Obtener todas las mascotas de un usuario
 router.get('/user/:userId', async (req, res) => {
   try {
     const pets = await PetProfile.find({ userId: req.params.userId });
