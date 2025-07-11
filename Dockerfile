@@ -1,20 +1,27 @@
-# Usa imagen oficial de Node.js
-FROM node:20
+# Etapa 1: Construcción - instalación de dependencias
+FROM node:20-alpine AS builder
 
-# Crea directorio de trabajo
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copia package.json y package-lock.json
+# Copiar package.json y lock para aprovechar caché
 COPY package*.json ./
 
-# Instala dependencias
-RUN npm install
+# Instalar solo las dependencias de producción
+RUN npm install --only=production
 
-# Copia el resto del código
+# Copiar el resto del código
 COPY . .
 
-# Expone el puerto 3003
+# Etapa 2: Imagen final optimizada
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copiar archivos desde el builder
+COPY --from=builder /app /app
+
+# Exponer el puerto que usa este microservicio
 EXPOSE 3003
 
 # Comando de inicio
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

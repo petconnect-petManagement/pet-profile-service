@@ -30,7 +30,9 @@ LICENSE
 # docker files (porque se copian solo lo necesario en el Dockerfile)
 docker-compose.yml
 Dockerfile
-
+.dockerignore
+.git
+.gitignore
 # otros posibles
 *.swp
 *.swo
