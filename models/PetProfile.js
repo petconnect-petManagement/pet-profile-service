@@ -28,4 +28,4 @@ const PetProfileSchema = new mongoose.Schema({
 
 const PetProfile = mongoose.model('PetProfile', PetProfileSchema);
 
-module.exports = PetProfile;  // ✅ Esta es la clave
+module.exports = PetProfile;  
