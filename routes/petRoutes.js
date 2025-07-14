@@ -46,7 +46,7 @@ router.post(
 
       // Estructura de respuesta compatible
       res.status(201).json({
-        pet_id: newId.toString(),
+        _id: newId.toString(),
         userId: pet.userId,
         name: pet.name,
         species: pet.species,
