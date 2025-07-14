@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
+const mongoose = require('mongoose');
 const PetProfile = require('../models/PetProfile');
 const authMiddleware = require('../middleware/authMiddleware');
 const axios = require('axios');
@@ -23,7 +24,7 @@ router.post(
     try {
       const userId = req.user.id;
 
-      // ✅ Verifica existencia del usuario en user-profile-service vía Docker
+      // Verifica existencia del usuario
       const response = await axios.get(
         `http://user-profile-service:3001/api/user-profile/user/${userId}`
       );
@@ -32,16 +33,20 @@ router.post(
         return res.status(400).json({ message: 'User not found in user-profile-service' });
       }
 
+      // Generar _id manualmente para usarlo como pet_id
+      const newId = new mongoose.Types.ObjectId();
+
       const pet = new PetProfile({
+        _id: newId,
         userId,
         ...req.body
       });
 
       await pet.save();
 
-      // ✅ Respuesta estructurada con pet_id
+      // Estructura de respuesta compatible
       res.status(201).json({
-        pet_id: pet._id,
+        pet_id: newId.toString(),
         userId: pet.userId,
         name: pet.name,
         species: pet.species,
