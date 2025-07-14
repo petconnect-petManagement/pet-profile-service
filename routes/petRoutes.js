@@ -38,7 +38,18 @@ router.post(
       });
 
       await pet.save();
-      res.status(201).json(pet);
+
+      // ✅ Respuesta estructurada con pet_id
+      res.status(201).json({
+        pet_id: pet._id,
+        userId: pet.userId,
+        name: pet.name,
+        species: pet.species,
+        breed: pet.breed,
+        age: pet.age,
+        createdAt: pet.createdAt
+      });
+
     } catch (err) {
       console.error(err.message);
 
